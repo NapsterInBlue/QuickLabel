@@ -73,7 +73,8 @@ def load_and_pad_images(impath, max_height, max_width):
     Iterate though all of the image filepaths, load the 
     images, then pad them with black, if necessary
     '''
-    im = cv2.imread(impath)
+    imBGR = cv2.imread(impath)
+    im = cv2.cvtColor(imBGR, cv2.COLOR_BGR2RGB)
 
     height_needed, width_needed = determine_pad_amount(im, max_height,
                                                        max_width)
