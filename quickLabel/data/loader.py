@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 
 def load_image_data(fpath):
@@ -21,7 +22,24 @@ def load_image_data(fpath):
 
     max_height, max_width = get_max_image_dims(fpath)
 
-    print(max_height, max_width)
+    X = []
+    y = []
+
+    with open(fpath) as f:
+        for row in f:
+            impath, score = row.split(';')
+
+            im = load_and_pad_images(impath, max_height, max_width)
+
+            X.append(im)
+            y.append(float(score))
+
+    X = np.array(X)
+    y = np.array(y)
+
+    return X, y
+
+
 
 def get_max_image_dims(fpath):
     '''
@@ -44,4 +62,38 @@ def get_max_image_dims(fpath):
             if width > max_width:
                 max_width = width
 
+    print('Max height:', max_height)
+    print('Max width :', max_width)
+
     return max_height, max_width
+
+
+def load_and_pad_images(impath, max_height, max_width):
+    '''
+    Iterate though all of the image filepaths, load the 
+    images, then pad them with black, if necessary
+    '''
+    im = cv2.imread(impath)
+
+    height_needed, width_needed = determine_pad_amount(im, max_height,
+                                                       max_width)
+
+    im = np.pad(im, ((0, height_needed), (0, width_needed), (0, 0)),
+                mode='constant', constant_values=0)
+
+    return im
+
+
+def determine_pad_amount(image_array, max_height, max_width):
+    '''
+    Given an image and desired max height/width,
+    find how much height and width is needed to make
+    the image the appropriate size
+    '''
+
+    height, width, _ = image_array.shape
+
+    height_needed = max_height - height
+    width_needed = max_width - width
+
+    return height_needed, width_needed
