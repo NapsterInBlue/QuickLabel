@@ -1,2 +1,4 @@
-pillow
-
+Click==7.0
+numpy==1.15.4
+opencv-python==3.4.5.20
+Pillow==5.3.0

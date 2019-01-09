@@ -2,25 +2,41 @@ import cv2
 import numpy as np
 
 
-def load_image_data(fpath):
+def load_normalized_image_data(fpath, consider_size=False, rescale_len=200):
     '''
     Given a csv with columns (image filepath, numeric score)
+    convert a series of images to numpy arrays (with some
+    pre-processing) as well as their corresponding target values
 
-    Note: Also resolves inconsistencies in image size per
+    By default, the pre-processing is as follows:
+
+    1. Go through and pad each non-square image with black
+       until its height equals its width
+    2. Downscale each image according to rescale_len
 
     Parameters
     ----------
     fpath: str, pathlike
         Location of the csv you want to read from
-    
+    consider_size: bool
+        False: Each image follows the default behavior
+               outlined above
+        True:  Each image will be black-padded to be an NxN
+               square, where N is the longest width/height
+               found in the directory
+    rescale_len: int
+        The resulting images will each be of size
+        (rescale_len, rescale_len)
+
     Returns
     -------
     X: numpy.array
         The numpy representation for each image in (R, G, B)
-    y: 
+    y: numpy.array
+        A float32 array of the target values for each image
     '''
 
-    max_height, max_width = get_max_image_dims(fpath)
+    max_image_dim = get_max_image_dim(fpath)
 
     X = []
     y = []
@@ -29,7 +45,7 @@ def load_image_data(fpath):
         for row in f:
             impath, score = row.split(';')
 
-            im = load_and_pad_images(impath, max_height, max_width)
+            im = load_and_pad_images(impath, max_image_dim, max_image_dim)
 
             X.append(im)
             y.append(float(score))
@@ -41,7 +57,7 @@ def load_image_data(fpath):
 
 
 
-def get_max_image_dims(fpath):
+def get_max_image_dim(fpath):
     '''
     Open up all of the images to see their heights and widths.
     Keep a running max for each, which is returned at the end.
@@ -65,7 +81,7 @@ def get_max_image_dims(fpath):
     print('Max height:', max_height)
     print('Max width :', max_width)
 
-    return max_height, max_width
+    return max(max_height, max_width)
 
 
 def load_and_pad_images(impath, max_height, max_width):
