@@ -45,8 +45,13 @@ def load_normalized_image_data(fpath, consider_size=False, rescale_len=200):
         for row in f:
             impath, score = row.split(';')
 
-            im = load_and_pad_images(impath, max_image_dim, max_image_dim)
+            if consider_size:
+                im = load_and_pad_images(impath, max_image_dim)
+            else:
+                im = load_and_pad_images(impath)
 
+
+            im = cv2.resize(im, (rescale_len, rescale_len))
             X.append(im)
             y.append(float(score))
 
@@ -60,7 +65,7 @@ def load_normalized_image_data(fpath, consider_size=False, rescale_len=200):
 def get_max_image_dim(fpath):
     '''
     Open up all of the images to see their heights and widths.
-    Keep a running max for each, which is returned at the end.
+    Keep a running max of each, which is returned at the end.
     '''
 
     max_height = 0
@@ -84,7 +89,7 @@ def get_max_image_dim(fpath):
     return max(max_height, max_width)
 
 
-def load_and_pad_images(impath, max_height, max_width):
+def load_and_pad_images(impath, max_image_dim=None):
     '''
     Iterate though all of the image filepaths, load the 
     images, then pad them with black, if necessary
@@ -92,8 +97,11 @@ def load_and_pad_images(impath, max_height, max_width):
     imBGR = cv2.imread(impath)
     im = cv2.cvtColor(imBGR, cv2.COLOR_BGR2RGB)
 
-    height_needed, width_needed = determine_pad_amount(im, max_height,
-                                                       max_width)
+    if not max_image_dim:
+        max_image_dim = max(im.shape)
+
+    height_needed, width_needed = determine_pad_amount(im, max_image_dim,
+                                                       max_image_dim)
 
     im = np.pad(im, ((0, height_needed), (0, width_needed), (0, 0)),
                 mode='constant', constant_values=0)
